@@ -28,3 +28,8 @@ export type RpcTranscoder<T> = {
   serialize: (data: T) => any;
   deserialize: (data: any) => T;
 };
+
+export enum ParamsType {
+  Array,
+  Object,
+}

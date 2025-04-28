@@ -1,4 +1,5 @@
 import {
+  ParamsType,
   type JsonRpcErrorResponse,
   type JsonRpcRequest,
   type JsonRpcResponse,
@@ -125,9 +126,10 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
   const sendRequest = async (
     method: string,
     args: any[],
-    signal: AbortSignal
+    signal: AbortSignal,
+    paramsType: ParamsType = ParamsType.Array
   ) => {
-    const req = createRequest(method, args, uuid);
+    const req = createRequest(method, args, uuid, paramsType);
     const raw = await transport(serialize(req as any), signal);
     const res: unknown = deserialize(raw);
     if (!isJsonRpcResponse(res)) {
@@ -184,7 +186,8 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
 export function createRequest(
   method: string,
   params?: any,
-  uuid?: RpcUuid
+  uuid?: RpcUuid,
+  paramsType?: ParamsType
 ): JsonRpcRequest {
   const req: JsonRpcRequest = {
     jsonrpc: "2.0",
@@ -194,10 +197,10 @@ export function createRequest(
     method,
   };
 
-  if (params?.length && Array.isArray(params)) {
+  if (params?.length && paramsType === ParamsType.Array) {
     req.params = removeTrailingUndefs(params);
-  } else if (typeof params === "object") {
-    req.params = params;
+  } else if (paramsType === ParamsType.Object) {
+    req.params = Array.isArray(params) ? params[0] : params;
   }
 
   return req;
