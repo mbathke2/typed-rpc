@@ -196,8 +196,8 @@ export function createRequest(
 
   if (params?.length && Array.isArray(params)) {
     req.params = removeTrailingUndefs(params);
-  } else if (typeof params === 'object') {
-    req.params = params
+  } else if (typeof params === "object") {
+    req.params = params;
   }
 
   return req;
