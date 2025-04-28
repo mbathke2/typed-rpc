@@ -183,7 +183,7 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
  */
 export function createRequest(
   method: string,
-  params?: any[],
+  params?: any,
   uuid?: RpcUuid
 ): JsonRpcRequest {
   const req: JsonRpcRequest = {
@@ -194,8 +194,10 @@ export function createRequest(
     method,
   };
 
-  if (params?.length) {
+  if (params?.length && Array.isArray(params)) {
     req.params = removeTrailingUndefs(params);
+  } else if (typeof params === 'object') {
+    req.params = params
   }
 
   return req;
