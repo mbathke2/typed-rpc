@@ -74,6 +74,7 @@ type RpcClientOptions =
   | ((FetchOptions | { transport: RpcTransport }) & {
       transcoder?: RpcTranscoder<any>;
       uuid?: RpcUuid;
+      paramsType?: ParamsType;
     });
 
 type FetchOptions = {
@@ -105,6 +106,7 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
   let transport: RpcTransport;
   let transcoder: RpcTranscoder<any> = identityTranscoder;
   let uuid: RpcUuid | undefined;
+  let paramsType: ParamsType = ParamsType.Array;
 
   if (typeof options === "string") {
     transport = fetchTransport({ url: options });
@@ -116,6 +118,14 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
     transport = fetchTransport(options);
     transcoder = options.transcoder || identityTranscoder;
     uuid = options.uuid;
+  }
+
+  if (
+    typeof options !== "string" &&
+    options.paramsType &&
+    options.paramsType === ParamsType.Object
+  ) {
+    paramsType = ParamsType.Object;
   }
 
   const { serialize, deserialize } = transcoder;
