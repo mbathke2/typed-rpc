@@ -176,7 +176,7 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
       if (prop === "toJSON") return;
       return (...args: any) => {
         const ac = new AbortController();
-        const promise = sendRequest(prop.toString(), args, ac.signal);
+        const promise = sendRequest(prop.toString(), args, ac.signal, paramsType);
         abortControllers.set(promise, ac);
         promise
           .finally(() => {
