@@ -1,4 +1,5 @@
 import {
+  ParamsType,
   type JsonRpcErrorResponse,
   type JsonRpcRequest,
   type JsonRpcResponse,
@@ -73,6 +74,7 @@ type RpcClientOptions =
   | ((FetchOptions | { transport: RpcTransport }) & {
       transcoder?: RpcTranscoder<any>;
       uuid?: RpcUuid;
+      paramsType?: ParamsType;
     });
 
 type FetchOptions = {
@@ -104,6 +106,7 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
   let transport: RpcTransport;
   let transcoder: RpcTranscoder<any> = identityTranscoder;
   let uuid: RpcUuid | undefined;
+  let paramsType: ParamsType = ParamsType.Array;
 
   if (typeof options === "string") {
     transport = fetchTransport({ url: options });
@@ -117,6 +120,14 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
     uuid = options.uuid;
   }
 
+  if (
+    typeof options !== "string" &&
+    options.paramsType &&
+    options.paramsType === ParamsType.Object
+  ) {
+    paramsType = ParamsType.Object;
+  }
+
   const { serialize, deserialize } = transcoder;
 
   /**
@@ -125,9 +136,10 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
   const sendRequest = async (
     method: string,
     args: any[],
-    signal: AbortSignal
+    signal: AbortSignal,
+    paramsType: ParamsType = ParamsType.Array
   ) => {
-    const req = createRequest(method, args, uuid);
+    const req = createRequest(method, args, uuid, paramsType);
     const raw = await transport(serialize(req as any), signal);
     const res: unknown = deserialize(raw);
     if (!isJsonRpcResponse(res)) {
@@ -183,8 +195,9 @@ export function rpcClient<T extends object>(options: RpcClientOptions) {
  */
 export function createRequest(
   method: string,
-  params?: any[],
-  uuid?: RpcUuid
+  params?: any,
+  uuid?: RpcUuid,
+  paramsType?: ParamsType
 ): JsonRpcRequest {
   const req: JsonRpcRequest = {
     jsonrpc: "2.0",
@@ -194,8 +207,10 @@ export function createRequest(
     method,
   };
 
-  if (params?.length) {
+  if (params?.length && paramsType === ParamsType.Array) {
     req.params = removeTrailingUndefs(params);
+  } else if (paramsType === ParamsType.Object) {
+    req.params = Array.isArray(params) ? params[0] : params;
   }
 
   return req;

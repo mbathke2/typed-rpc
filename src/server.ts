@@ -19,7 +19,9 @@ export function isJsonRpcRequest(req: unknown): req is JsonRpcRequest {
       typeof request.id === "string" ||
       typeof request.id === "number" ||
       request.id === null) &&
-    (request.params === undefined || Array.isArray(request.params))
+    (request.params === undefined ||
+      Array.isArray(request.params) ||
+      typeof request.params === "object")
   );
 }
 
